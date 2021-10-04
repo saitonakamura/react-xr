@@ -21,6 +21,7 @@ export type XRInteractionType =
   | 'onSqueeze'
   | 'onSqueezeEnd'
   | 'onSqueezeStart'
+  | 'onSelectMissed'
 
 export type XRInteractionHandler = (event: XRInteractionEvent) => any
 
@@ -113,6 +114,15 @@ export function InteractionManager({ children }: { children: any }) {
         handler({ controller: e.controller, intersection: hovering.get(hovered) })
       )
     }
+
+    if (interaction === 'onSelect') {
+      for (const [eventObject, entry] of interactions.entries()) {
+        const handlers = entry['onSelectMissed']
+        if (!hovering.has(eventObject) && handlers) {
+          handlers.forEach((handler) => handler({ controller: e.controller }))
+        }
+      }
+    }
   }
 
   useXREvent('select', triggerEvent('onSelect'))
@@ -163,6 +173,7 @@ export const Interactive = forwardRef(
       onSqueezeStart?: XRInteractionHandler
       onSqueezeEnd?: XRInteractionHandler
       onSqueeze?: XRInteractionHandler
+      onSelectMissed?: XRInteractionHandler
     },
     passedRef
   ) => {
@@ -176,6 +187,7 @@ export const Interactive = forwardRef(
     useInteraction(ref, 'onSqueezeStart', props.onSqueezeStart)
     useInteraction(ref, 'onSqueezeEnd', props.onSqueezeEnd)
     useInteraction(ref, 'onSqueeze', props.onSqueeze)
+    useInteraction(ref, 'onSelectMissed', props.onSelectMissed)
 
     return <group ref={mergeRefs([passedRef, ref])}>{props.children}</group>
   }
