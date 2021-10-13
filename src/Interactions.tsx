@@ -141,7 +141,7 @@ export function InteractionManager({ children }: { children: any }) {
   return <InteractionsContext.Provider value={contextValue}>{children}</InteractionsContext.Provider>
 }
 
-export const useInteraction = (ref: any, type: XRInteractionType, handler?: XRInteractionHandler) => {
+export const useInteraction = (ref: React.RefObject<Object3D>, type: XRInteractionType, handler?: XRInteractionHandler) => {
   const { addInteraction, removeInteraction } = useContext(InteractionsContext)
 
   const isPresent = handler !== undefined
@@ -151,7 +151,7 @@ export const useInteraction = (ref: any, type: XRInteractionType, handler?: XRIn
   }, [handler])
 
   useEffect(() => {
-    if (!isPresent) return
+    if (!isPresent || !ref.current) return
 
     const handlerFn = (e: XRInteractionEvent) => {
       // @ts-ignore
@@ -181,7 +181,7 @@ export const Interactive = forwardRef(
     },
     passedRef
   ) => {
-    const ref = useRef<Object3D>()
+    const ref = useRef<Object3D>(null)
 
     useInteraction(ref, 'onHover', props.onHover)
     useInteraction(ref, 'onBlur', props.onBlur)
