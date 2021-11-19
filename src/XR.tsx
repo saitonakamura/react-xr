@@ -18,6 +18,7 @@ import {
   XRInputSourceChangeEvent,
   XRReferenceSpace
 } from 'three'
+import { getGl, getCamera } from './useThreeSelectors'
 
 export interface XRContextValue {
   controllers: XRController[]
@@ -28,7 +29,7 @@ export interface XRContextValue {
 const XRContext = React.createContext<XRContextValue>({} as any)
 
 const useControllers = (group: Group): XRController[] => {
-  const { gl } = useThree()
+  const gl = useThree(getGl)
   const [controllers, setControllers] = React.useState<XRController[]>([])
 
   React.useEffect(() => {
@@ -57,7 +58,7 @@ const useControllers = (group: Group): XRController[] => {
 }
 
 export function useHitTest(hitTestCallback: (hitMatrix: Matrix4, hit: XRHitTestResult) => void) {
-  const { gl } = useThree()
+  const gl = useThree(getGl)
 
   const hitTestSource = React.useRef<XRHitTestSource | undefined>()
   const hitTestSourceRequested = React.useRef(false)
@@ -109,7 +110,8 @@ export function useHitTest(hitTestCallback: (hitMatrix: Matrix4, hit: XRHitTestR
 }
 
 export function XR({ foveation = 0, children }: { foveation?: number; children: React.ReactNode }) {
-  const { gl, camera } = useThree()
+  const camera = useThree(getCamera)
+  const gl = useThree(getGl)
   const [isPresenting, setIsPresenting] = React.useState(() => gl.xr.isPresenting)
   const [isHandTracking, setHandTracking] = React.useState(false)
   const [player] = React.useState(() => new Group())
@@ -236,7 +238,7 @@ export const useXR = () => {
 }
 
 export const useXRFrame = (callback: (time: DOMHighResTimeStamp, xrFrame: XRFrame) => void) => {
-  const { gl } = useThree()
+  const gl = useThree(getGl)
   const requestRef = React.useRef<number>()
   const previousTimeRef = React.useRef<number>()
 

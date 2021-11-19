@@ -1,5 +1,6 @@
 import { useThree } from '@react-three/fiber'
 import { useEffect } from 'react'
+import { getGl, getScene } from './useThreeSelectors'
 
 import { HandModel } from './webxr/HandModel.js'
 import { useXR } from './XR'
@@ -8,7 +9,8 @@ export function Hands(props: {
     modelLeft?:string
     modelRight?:string
   }) {
-  const { scene, gl } = useThree()
+  const gl = useThree(getGl)
+  const scene = useThree(getScene)
   const { controllers } = useXR()
 
   useEffect(() => {

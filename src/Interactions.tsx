@@ -7,6 +7,8 @@ import { ObjectsState } from './ObjectsState'
 import mergeRefs from 'react-merge-refs'
 import { useXREvent, XREvent } from './XREvents'
 
+/* @__PURE__ */ const tempMatrix = new Matrix4()
+
 export interface XRInteractionEvent {
   intersection?: Intersection
   intersections: Intersection[]
@@ -60,7 +62,6 @@ export function InteractionManager({ children }: { children: any }) {
   const intersect = React.useCallback(
     (controller: Object3D) => {
       const objects = Array.from(interactions.keys())
-      const tempMatrix = new Matrix4()
       tempMatrix.identity().extractRotation(controller.matrixWorld)
       raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld)
       raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix)
