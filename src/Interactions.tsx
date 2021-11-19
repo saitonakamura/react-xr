@@ -34,7 +34,7 @@ export const InteractionsContext = React.createContext<{
   removeInteraction: (object: Object3D, eventType: XRInteractionType, handler: XRInteractionHandler) => any
 }>({} as any)
 export function InteractionManager({ children }: { children: any }) {
-  const { controllers } = useXR()
+  const { controllers, onSelectMissed: onSelectMissedGlobal } = useXR()
 
   const [hoverState] = React.useState<Record<XRHandedness, Map<Object3D, Intersection>>>(() => ({
     left: new Map(),
@@ -120,6 +120,10 @@ export function InteractionManager({ children }: { children: any }) {
         if (!hovering.has(eventObject) && handlers) {
           handlers.forEach((handler) => handler({ controller: e.controller, intersections: Array.from(hovering.values()) }))
         }
+      }
+
+      if (onSelectMissedGlobal && hovering.size === 0) {
+        onSelectMissedGlobal({ controller: e.controller, intersections: [] })
       }
     }
 

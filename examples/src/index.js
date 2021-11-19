@@ -59,7 +59,7 @@ function HitTestExample() {
 
 function App() {
   return (
-    <VRCanvas>
+    <VRCanvas onSelectMissed={() => console.log('missed')}>
       <ambientLight intensity={0.5} />
       <pointLight position={[5, 5, 5]} />
 

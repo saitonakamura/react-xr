@@ -6,7 +6,7 @@ import { ARButton } from './webxr/ARButton'
 import { VRButton } from './webxr/VRButton'
 import { XRController } from './XRController'
 import { Props as ContainerProps } from '@react-three/fiber/dist/declarations/src/web/Canvas'
-import { InteractionManager, InteractionsContext } from './Interactions'
+import { InteractionManager, InteractionsContext, XRInteractionHandler } from './Interactions'
 import {
   XRSessionInit,
   Group,
@@ -25,6 +25,7 @@ export interface XRContextValue {
   isPresenting: boolean
   player: Group
   isHandTracking: boolean
+  onSelectMissed?: XRInteractionHandler
 }
 const XRContext = React.createContext<XRContextValue>({} as any)
 
@@ -109,7 +110,15 @@ export function useHitTest(hitTestCallback: (hitMatrix: Matrix4, hit: XRHitTestR
   })
 }
 
-export function XR({ foveation = 0, children }: { foveation?: number; children: React.ReactNode }) {
+export function XR({
+  foveation = 0,
+  children,
+  onSelectMissed
+}: {
+  foveation?: number
+  children: React.ReactNode
+  onSelectMissed?: XRInteractionHandler
+}) {
   const camera = useThree(getCamera)
   const gl = useThree(getGl)
   const [isPresenting, setIsPresenting] = React.useState(() => gl.xr.isPresenting)
@@ -132,7 +141,7 @@ export function XR({ foveation = 0, children }: { foveation?: number; children: 
   }, [gl])
 
   React.useEffect(() => {
-    const xr = gl.xr as any
+    const xr = gl.xr
 
     if (xr.setFoveation) {
       xr.setFoveation(foveation)
@@ -155,11 +164,12 @@ export function XR({ foveation = 0, children }: { foveation?: number; children: 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPresenting])
 
-  const value = React.useMemo(() => ({ controllers, isPresenting, isHandTracking, player }), [
+  const value = React.useMemo(() => ({ controllers, isPresenting, isHandTracking, player, onSelectMissed }), [
     controllers,
     isPresenting,
     isHandTracking,
-    player
+    player,
+    onSelectMissed
   ])
 
   return (
@@ -172,10 +182,15 @@ export function XR({ foveation = 0, children }: { foveation?: number; children: 
   )
 }
 
-function XRCanvas({ foveation, children, ...rest }: ContainerProps & { foveation?: number }) {
+function XRCanvas({
+  foveation,
+  children,
+  onSelectMissed,
+  ...rest
+}: ContainerProps & { foveation?: number; onSelectMissed?: XRInteractionHandler }) {
   return (
     <Canvas vr {...rest}>
-      <XR foveation={foveation}>
+      <XR foveation={foveation} onSelectMissed={onSelectMissed}>
         <InteractionManager>{children}</InteractionManager>
       </XR>
     </Canvas>
@@ -198,6 +213,7 @@ export type XRCanvasProps = ContainerProps & {
    * 1 = maximum foveation = the edges render at lower resolution
    */
   foveation?: number
+  onSelectMissed?: XRInteractionHandler
 }
 
 export function VRCanvas({ children, sessionInit, onCreated, ...rest }: XRCanvasProps) {
