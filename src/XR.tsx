@@ -130,7 +130,7 @@ export function XR({
   const controllers = useControllers(player)
 
   React.useEffect(() => {
-    const xr = gl.xr as any
+    const xr = gl.xr
 
     const handleSessionChange = () => setIsPresenting(xr.isPresenting)
 
@@ -167,13 +167,10 @@ export function XR({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPresenting])
 
-  const value = React.useMemo(() => ({ controllers, isPresenting, isHandTracking, player, onSelectMissed }), [
-    controllers,
-    isPresenting,
-    isHandTracking,
-    player,
-    onSelectMissed
-  ])
+  const value = React.useMemo(
+    () => ({ controllers, isPresenting, isHandTracking, player, onSelectMissed }),
+    [controllers, isPresenting, isHandTracking, player, onSelectMissed]
+  )
 
   return (
     <XRContext.Provider value={value}>
