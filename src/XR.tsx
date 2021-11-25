@@ -6,7 +6,8 @@ import { ARButton } from './webxr/ARButton'
 import { VRButton } from './webxr/VRButton'
 import { XRController } from './XRController'
 import { Props as ContainerProps } from '@react-three/fiber/dist/declarations/src/web/Canvas'
-import { InteractionManager, InteractionsContext, XRInteractionHandler } from './Interactions'
+import { InteractionManager, InteractionsContext } from './Interactions'
+import { XRContext, GlobalOnSelectMissed } from './context'
 import {
   XRSessionInit,
   Group,
@@ -20,14 +21,16 @@ import {
 } from 'three'
 import { getGl, getCamera } from './useThreeSelectors'
 
-export interface XRContextValue {
-  controllers: XRController[]
-  isPresenting: boolean
-  player: Group
-  isHandTracking: boolean
-  onSelectMissed?: XRInteractionHandler
+export type { XRContextValue } from './context'
+
+export const useXR = () => {
+  const xrValue = React.useContext(XRContext)
+  const interactionsValue = React.useContext(InteractionsContext)
+
+  const contextValue = React.useMemo(() => ({ ...xrValue, ...interactionsValue }), [xrValue, interactionsValue])
+
+  return contextValue
 }
-const XRContext = React.createContext<XRContextValue>({} as any)
 
 const useControllers = (group: Group): XRController[] => {
   const gl = useThree(getGl)
@@ -117,7 +120,7 @@ export function XR({
 }: {
   foveation?: number
   children: React.ReactNode
-  onSelectMissed?: XRInteractionHandler
+  onSelectMissed?: GlobalOnSelectMissed
 }) {
   const camera = useThree(getCamera)
   const gl = useThree(getGl)
@@ -187,7 +190,7 @@ function XRCanvas({
   children,
   onSelectMissed,
   ...rest
-}: ContainerProps & { foveation?: number; onSelectMissed?: XRInteractionHandler }) {
+}: ContainerProps & { foveation?: number; onSelectMissed?: GlobalOnSelectMissed }) {
   return (
     <Canvas vr {...rest}>
       <XR foveation={foveation} onSelectMissed={onSelectMissed}>
@@ -213,7 +216,7 @@ export type XRCanvasProps = ContainerProps & {
    * 1 = maximum foveation = the edges render at lower resolution
    */
   foveation?: number
-  onSelectMissed?: XRInteractionHandler
+  onSelectMissed?: GlobalOnSelectMissed
 }
 
 export function VRCanvas({ children, sessionInit, onCreated, ...rest }: XRCanvasProps) {
@@ -242,15 +245,6 @@ export function ARCanvas({ onCreated, children, sessionInit, ...rest }: XRCanvas
       {children}
     </XRCanvas>
   )
-}
-
-export const useXR = () => {
-  const xrValue = React.useContext(XRContext)
-  const interactionsValue = React.useContext(InteractionsContext)
-
-  const contextValue = React.useMemo(() => ({ ...xrValue, ...interactionsValue }), [xrValue, interactionsValue])
-
-  return contextValue
 }
 
 export const useXRFrame = (callback: (time: DOMHighResTimeStamp, xrFrame: XRFrame) => void) => {

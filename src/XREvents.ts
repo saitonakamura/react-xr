@@ -1,21 +1,23 @@
 import React from 'react'
 import { XRController } from './XRController'
-import { useXR } from './XR'
-import { XRHandedness } from 'three'
+import { XREventType, XRHandedness } from 'three'
+import { XRContext } from './context'
 
 export interface XREvent {
   originalEvent: any
   controller: XRController
 }
 
-export type XREventType = 'select' | 'selectstart' | 'selectend' | 'squeeze' | 'squeezestart' | 'squeezeend'
-
-export const useXREvent = (event: XREventType, handler: (e: XREvent) => any, { handedness }: { handedness?: XRHandedness } = {}) => {
+export const useXREvent = (
+  event: Exclude<XREventType, 'end' | 'inputsourceschange'>,
+  handler: (e: XREvent) => any,
+  { handedness }: { handedness?: XRHandedness } = {}
+) => {
   const handlerRef = React.useRef<(e: XREvent) => any>(handler)
   React.useEffect(() => {
     handlerRef.current = handler
   }, [handler])
-  const { controllers: allControllers } = useXR()
+  const { controllers: allControllers } = React.useContext(XRContext)
 
   React.useEffect(() => {
     const controllers = handedness ? allControllers.filter((it) => it.inputSource.handedness === handedness) : allControllers

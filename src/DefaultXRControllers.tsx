@@ -1,9 +1,10 @@
 import { useXR } from './XR'
 import React, { useEffect } from 'react'
-import { Color, Mesh, MeshBasicMaterial, BoxBufferGeometry, MeshBasicMaterialParameters, Group, Object3D, Intersection } from 'three'
+import { Color, Mesh, MeshBasicMaterial, BoxBufferGeometry, MeshBasicMaterialParameters, Group, Object3D } from 'three'
 import { useFrame, useThree } from '@react-three/fiber'
 import { XRControllerModelFactory } from './webxr/XRControllerModelFactory'
 import { getScene } from './useThreeSelectors'
+import { XRInteractionEvent } from 'Interactions'
 
 const modelFactory = new XRControllerModelFactory()
 const modelCache = new WeakMap<Group, any>()
@@ -18,7 +19,7 @@ export function DefaultXRControllers({ rayMaterial = {} }: { rayMaterial?: MeshB
       const ray = rays.get(it.controller.id)
       if (!ray) return
 
-      const intersection: Intersection = hoverState[it.inputSource.handedness].values().next().value
+      const { intersection }: XRInteractionEvent = hoverState[it.inputSource.handedness].values().next().value ?? {}
       if (!intersection || it.inputSource.handedness === 'none') {
         ray.visible = false
         return

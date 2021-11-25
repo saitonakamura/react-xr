@@ -24,9 +24,18 @@ function Button(props) {
 
   return (
     <Interactive
-      onSelect={() => setColor((Math.random() * 0xffffff) | 0)}
-      onHover={() => setHover(true)}
-      onBlur={() => setHover(false)}>
+      onSelect={(e) => {
+        setColor((Math.random() * 0xffffff) | 0)
+        e.stopPropagation()
+      }}
+      onHover={(e) => {
+        setHover(true)
+        e.stopPropagation()
+      }}
+      onBlur={() => setHover(false)}
+      onSelectMissed={(e) => {
+        console.log('missed', props.position[2], e)
+      }}>
       <Box scale={hover ? [1.5, 1.5, 1.5] : [1, 1, 1]} args={[0.4, 0.1, 0.1]} {...props}>
         <meshStandardMaterial attach="material" color={color} />
         {/* <Text position={[0, 0, 0.06]} fontSize={0.05} color="#000" anchorX="center" anchorY="middle">
@@ -59,7 +68,7 @@ function HitTestExample() {
 
 function App() {
   return (
-    <VRCanvas onSelectMissed={() => console.log('missed')}>
+    <VRCanvas onSelectMissed={() => console.log('missed global')} style={{ backgroundColor: 'black' }}>
       <ambientLight intensity={0.5} />
       <pointLight position={[5, 5, 5]} />
 
@@ -67,7 +76,9 @@ function App() {
       // modelLeft={"https://vazxmixjsiawhamofees.supabase.co/storage/v1/object/public/models/left-hand-black-webxr-tracking-ready/model.gltf"}
       // modelRight={"https://vazxmixjsiawhamofees.supabase.co/storage/v1/object/public/models/right-hand-black-webxr-tracking-ready/model.gltf"}
       />
-      <Button position={[0, 0.8, -1]} />
+      <Button position={[0.5, 1.5, -2]} />
+      <Button position={[0.5, 1.5, -3]} />
+      <Button position={[0, 1.5, -4]} />
       <DefaultXRControllers />
       {/* <HitTestExample /> */}
     </VRCanvas>
