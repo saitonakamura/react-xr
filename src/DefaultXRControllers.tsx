@@ -5,7 +5,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { XRControllerModelFactory } from './webxr/XRControllerModelFactory'
 import { getScene } from './useThreeSelectors'
 
-const modelFactory = new XRControllerModelFactory()
+export const modelFactory = new XRControllerModelFactory()
 const modelCache = new WeakMap<Group, any>()
 export function DefaultXRControllers({ rayMaterial = {} }: { rayMaterial?: MeshBasicMaterialParameters }) {
   const scene = useThree(getScene)
