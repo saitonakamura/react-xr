@@ -71,11 +71,17 @@ export function InteractionManager({ children }: { children: any }) {
     none: new Map()
   }))
 
-  const [hoverClosest] = React.useState<Record<XRHandedness, Intersection | undefined>>({
+  const [hoverClosest] = React.useState<Record<XRHandedness, Intersection | undefined>>(() => ({
     left: undefined,
     right: undefined,
     none: undefined
-  })
+  }))
+
+  const [initialHits] = React.useState<Record<XRHandedness, Set<string> | undefined>>(() => ({
+    left: undefined,
+    right: undefined,
+    none: undefined
+  }))
 
   const [interactions] = React.useState(() => ObjectsState.make<XRInteractionType, XRInteractionHandler>())
 
@@ -189,10 +195,11 @@ export function InteractionManager({ children }: { children: any }) {
       handedness: XRHandedness,
       hoverClosest: Record<XRHandedness, Intersection | undefined>,
       hitsSet: Set<string>,
-      callback: (event: XRInteractionWithIntersectionEvent) => void
+      callback: (event: XRInteractionWithIntersectionEvent) => void,
+      filter?: (hit: Intersection, eventObject: Object3D) => boolean
     ) => {
       if (!intersections.length) {
-        return [intersections, eventObjects]
+        return
       }
 
       let stopped = false
@@ -200,6 +207,11 @@ export function InteractionManager({ children }: { children: any }) {
       for (let i = 0; i < intersections.length; i++) {
         const hit = intersections[i]
         const eventObject = eventObjects[i]
+
+        if (filter && !filter(hit, eventObject)) {
+          continue
+        }
+
         const event: XRInteractionWithIntersectionEvent = {
           eventObject,
           controller: xrController,
@@ -220,8 +232,6 @@ export function InteractionManager({ children }: { children: any }) {
           break
         }
       }
-
-      return [intersections, eventObjects]
     },
     [cancelHover, interactions.size]
   )
@@ -265,6 +275,10 @@ export function InteractionManager({ children }: { children: any }) {
     const handedness = xrController.inputSource.handedness
     const hovering = hoverState[handedness]
 
+    if (interaction === 'onSelectStart') {
+      initialHits[handedness] = hitsSet
+    }
+
     if (interaction === 'onSelect') {
       for (const [eventObject, entry] of interactions.entries()) {
         const handlers = entry['onSelectMissed']
@@ -287,10 +301,27 @@ export function InteractionManager({ children }: { children: any }) {
       }
     }
 
-    handleIntersects(hits, eventObjects, xrController, hovering, handedness, hoverClosest, hitsSet, (event) => {
-      const { eventObject } = event
-      ObjectsState.get(interactions, eventObject, interaction)?.forEach((handler) => handler(event))
-    })
+    const reactOnlyToObjectThatWereHitOnSelectStart = (_: Intersection, eventObject: Object3D) =>
+      initialHits[handedness]?.has(eventObject.uuid) ?? false
+
+    handleIntersects(
+      hits,
+      eventObjects,
+      xrController,
+      hovering,
+      handedness,
+      hoverClosest,
+      hitsSet,
+      (event) => {
+        const { eventObject } = event
+        ObjectsState.get(interactions, eventObject, interaction)?.forEach((handler) => handler(event))
+      },
+      interaction === 'onSelect' ? reactOnlyToObjectThatWereHitOnSelectStart : undefined
+    )
+
+    if (interaction === 'onSelect') {
+      initialHits[handedness] = undefined
+    }
   }
 
   useXREvent('select', triggerEvent('onSelect'))
