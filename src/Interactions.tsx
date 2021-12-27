@@ -39,6 +39,7 @@ export type XRInteractionWithIntersectionType =
   | 'onSqueeze'
   | 'onSqueezeEnd'
   | 'onSqueezeStart'
+  | 'onMove'
 
 export type XRInteractionNoIntersectionType = 'onBlur' | 'onSelectMissed'
 
@@ -257,6 +258,10 @@ export function InteractionManager({ children }: { children: any }) {
       handleIntersects(hits, eventObjects, xrController, hovering, handedness, hoverClosest, hitsSet, (event) => {
         const { eventObject } = event
         const hoverEvent = hovering.get(eventObject)
+        const moveHandlers = ObjectsState.get(interactions, eventObject, 'onMove')
+        if (moveHandlers) {
+          moveHandlers?.forEach((handler) => handler(event))
+        }
         if (!hoverEvent) {
           hovering.set(eventObject, event)
           if (ObjectsState.has(interactions, eventObject, 'onHover')) {
@@ -331,10 +336,13 @@ export function InteractionManager({ children }: { children: any }) {
   useXREvent('squeezeend', triggerEvent('onSqueezeEnd'))
   useXREvent('squeezestart', triggerEvent('onSqueezeStart'))
 
-  const contextValue = useMemo(
-    () => ({ addInteraction, removeInteraction, hoverState, raycaster, hoverClosest }),
-    [addInteraction, removeInteraction, hoverState, raycaster, hoverClosest]
-  )
+  const contextValue = useMemo(() => ({ addInteraction, removeInteraction, hoverState, raycaster, hoverClosest }), [
+    addInteraction,
+    removeInteraction,
+    hoverState,
+    raycaster,
+    hoverClosest
+  ])
 
   return <InteractionsContext.Provider value={contextValue}>{children}</InteractionsContext.Provider>
 }
@@ -390,6 +398,7 @@ export const Interactive = forwardRef(
       onSqueezeEnd?: XRInteractionWithIntersectionHandler
       onSqueeze?: XRInteractionWithIntersectionHandler
       onSelectMissed?: XRInteractionNoIntersectionHandler
+      onMove?: XRInteractionWithIntersectionHandler
     },
     passedRef
   ) => {
@@ -404,6 +413,7 @@ export const Interactive = forwardRef(
     useInteraction(ref, 'onSqueezeEnd', props.onSqueezeEnd)
     useInteraction(ref, 'onSqueeze', props.onSqueeze)
     useInteraction(ref, 'onSelectMissed', props.onSelectMissed)
+    useInteraction(ref, 'onMove', props.onMove)
 
     return <group ref={mergeRefs([passedRef, ref])}>{props.children}</group>
   }
